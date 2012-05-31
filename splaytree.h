@@ -11,4 +11,9 @@ void insert_splay(SplayTree *splay, Item *i, Less less);
 void traverse_splay(SplayTree *splay, int low, int high,
     function_on_node func);
 Item *search_splay(SplayTree *splay, key_type k, Key key_function);
+Item *delete_splay(SplayTree *splay, key_type k, Key key_function);
+Item *delete_splay_max(SplayTree *splay);
+Item *delete_splay_min(SplayTree *splay);
+Item *search_splay_max(SplayTree *splay);
+Item *search_splay_min(SplayTree *splay);
 #endif

@@ -346,6 +346,9 @@ static TreeLink __delete_splay(SplayTree *splay, key_type k, Key key_function, I
   L = malloc(sizeof(SplayTree));
 
   splay->head = __search_splay(splay, k, x, key_function);
+  /* No such item to delete , x will be NULL */
+  if (*x == NULL)
+    return splay->head;
   l = splay->head->left;
   r = splay->head->right;
   tmp = splay->head;
@@ -357,11 +360,17 @@ static TreeLink __delete_splay(SplayTree *splay, key_type k, Key key_function, I
   L->head = l;
   L->terminal = splay->terminal;
 
-  L->head = __search_splay_min_max(L, NULL, 1);
-  L->head->right = r;
+  if (L->head != L->terminal)
+  {
+    L->head = __search_splay_min_max(L, NULL, 1);
+    L->head->right = r;
+    L->head->number_of_nodes = L->head->number_of_nodes + r->number_of_nodes;
+    l = L->head;
+  }
+  else
+    l = r;
   r->parent = L->head;
 
-  l = L->head;
   free(L);
   free(tmp);
 
