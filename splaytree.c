@@ -244,7 +244,6 @@ static TreeLink __search_splay_min_max(SplayTree *splay, Item **x, bool min_max)
 {
   TreeLink next = splay->head;
   
-  {
   if (min_max)
   {
     /* Max */
@@ -252,10 +251,11 @@ static TreeLink __search_splay_min_max(SplayTree *splay, Item **x, bool min_max)
       next = next->right;
   } else
   {
-    while (next->left != terminal)
+    while (next->left != splay->terminal)
       next = next->left;
   }
-  *x = next->item;
+  if (x != NULL)
+    *x = next->item;
   return __splay_to_root(splay, next);
 }
 
@@ -307,7 +307,7 @@ Item *delete_splay_min(SplayTree *splay)
   splay->head = __search_splay_min_max(splay, &x, 0);
   tmp = splay->head;
   splay->head->right->parent = splay->head->parent;
-  splay->head = splay->right;
+  splay->head = splay->head->right;
 
   free(tmp);
 
@@ -327,21 +327,58 @@ Item *delete_splay_max(SplayTree *splay)
   splay->head = __search_splay_min_max(splay, &x, 1);
   tmp = splay->head;
   splay->head->left->parent = splay->head->parent;
-  splay->head = splay->left;
+  splay->head = splay->head->left;
 
   free(tmp);
 
   return x;
 }
 
-static TreeLink __delete_splay(SplayTree *splay, key_type k, Key key_function)
+/* Remove a node in splay tree, access the node to be deleted bringing it
+ * to the root, then delete the root leaving two subtree L and R, find the
+ * largest element in L or find the minimum element in R, R is the right 
+ * child of L or L is the left child of R*/
+static TreeLink __delete_splay(SplayTree *splay, key_type k, Key key_function, Item **x)
 {
+  TreeLink l, r, tmp;
+  SplayTree *L;
 
+  L = malloc(sizeof(SplayTree));
+
+  splay->head = __search_splay(splay, k, x, key_function);
+  l = splay->head->left;
+  r = splay->head->right;
+  tmp = splay->head;
+  if (x != NULL)
+    *x = tmp->item;
+
+  l->parent = splay->terminal;
+  r->parent = splay->terminal;
+  L->head = l;
+  L->terminal = splay->terminal;
+
+  L->head = __search_splay_min_max(L, NULL, 1);
+  L->head->right = r;
+  r->parent = L->head;
+
+  l = L->head;
+  free(L);
+  free(tmp);
+
+  return l; 
 }
 
 Item *delete_splay(SplayTree *splay, key_type k, Key key_function)
 {
   Item *x;
 
+  if (splay->head == splay->terminal)
+  {
+    fprintf(stdin, "Empty splay tree :(\n");
+    return NULL;
+  }
+  
+  splay->head = __delete_splay(splay, k, key_function, &x);
 
+  return x;
 }
